@@ -1,0 +1,40 @@
+name: New PR or Issue Twitter Bot
+
+on:
+  pull_request:
+    types: [opened]
+  issues:
+    types: [opened]
+
+jobs:
+  new-pr-or-issue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Get contributor information
+        id: contributor-info
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: repoData } = await github.repos.get({ owner: context.repo.owner, repo: context.repo.repo });
+            const { data: contributorData } = await github.users.getByUsername({ username: github.context.payload.sender.login });
+            return { repoData, contributorData }
+
+      - name: Check if contributor is new
+        id: is-new-contributor
+        if: steps.contributor-info.outputs.contributorData.public_repos === 0
+        run: echo "::set-output name=is-new-contributor::true"
+
+      - name: Post tweet
+        if: steps.is-new-contributor.outputs.is-new-contributor == 'true'
+        uses: appleboy/twitter-action@v1.4.0
+        with:
+          consumer_key: ${{ secrets.TWITTER_CONSUMER_KEY }}
+          consumer_secret: ${{ secrets.TWITTER_CONSUMER_SECRET }}
+          access_token: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          access_token_secret: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          status: "New pull request/issue created in repository ${{ github.repository }} by new contributor ${{ github.actor }}!"
