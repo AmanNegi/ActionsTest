@@ -29,12 +29,12 @@ jobs:
         if: steps.contributor-info.outputs.contributorData.public_repos == 0
         run: echo "::set-output name=is-new-contributor::true"
 
-      - name: Post tweet
+      - name: Post Tweet
         if: steps.is-new-contributor.outputs.is-new-contributor == 'true'
-        uses: appleboy/twitter-action@v1.4.0
+        uses: infraway/tweet-action@v1
         with:
-          consumer_key: ${{ secrets.TWITTER_CONSUMER_KEY }}
-          consumer_secret: ${{ secrets.TWITTER_CONSUMER_SECRET }}
+          status: Tweeted from Github Actions
+          api_key: ${{ secrets.TWITTER_API_KEY }}
+          api_key_secret: ${{ secrets.TWITTER_API_KEY_SECRET }}
           access_token: ${{ secrets.TWITTER_ACCESS_TOKEN }}
           access_token_secret: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
-          status: "New pull request/issue created in repository ${{ github.repository }} by new contributor ${{ github.actor }}!"
